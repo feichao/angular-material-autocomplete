@@ -12,7 +12,7 @@
 
 <body>
   <div ng-controller="DemoCtrl" style="margin: 20px;">
-    <div fc-auto-complete></div>
+    <div fc-auto-complete placeholder="请输入内容" list-data="userList"></div>
   </div>
   <script src="bower_components/angular/angular.js"></script>
   <script src="bower_components/angular-animate/angular-animate.js"></script>
@@ -27,7 +27,7 @@
     ]).controller('DemoCtrl', DemoCtrl);
 
   function DemoCtrl($scope) {
-    
+    $scope.userList = ['abcdefg-1', 'abcdefg-2', 'abcdefg-3', 'abcdefg-4', 'abcdefg-5'];
   }
   </script>
 </body>

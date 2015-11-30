@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  var app;
+  var app, contains;
 
   app = angular.module('fc.autocomplete', []);
 
@@ -10,35 +10,59 @@
   function fcScroll() {
     return function(scope, ele, attrs) {
       var list = ele.find('md-list')[0];
-      ele.on('keydown', function(e) {        
+      ele.on('keydown', function(e) {
         var index = attrs.fcScroll;
         var content = document.getElementById('dropdown-content-' + index);
 
-        if(content) {
+        if (content) {
           list.scrollTop = content.offsetTop - content.offsetHeight;
         }
       });
     };
   }
 
+  contains = function(container, contained) {
+    var node;
+    node = contained.parentNode;
+    while (node !== null && node !== container) {
+      node = node.parentNode;
+    }
+    return node !== null;
+  };
+
+  app.directive('outsideClick', ['$document', '$parse', function($document, $parse) {
+    return {
+      link: function($scope, $element, $attributes) {
+        var onDocumentClick, scopeExpression;
+        scopeExpression = $attributes.outsideClick;
+        onDocumentClick = function(event) {
+          if (!contains($element[0], event.target)) {
+            $scope.$apply(scopeExpression);
+          }
+        };
+        $document.on('click', onDocumentClick);
+        $element.on('$destroy', function() {
+          $document.off('click', onDocumentClick);
+        });
+      }
+    };
+  }]);
+
   app.directive('fcAutoComplete', function() {
     return {
       scope: {
-        wmpTotal: '=',
-        position: '@',
-        gotoPage: '&',
-        step: '=',
-        currentPage: '='
+        placeholder: '@',
+        listData: '='
       },
       template: [
-        '<md-input-container md-no-float class="auto-complete pdt1" ng-keydown="vm.getKey($event)" fc-scroll="{{ vm.index }}">',
-        ' <input ng-model="vm.userinfo" ng-focus="vm.getSelectedList()" ng-click="vm.stopPropagation($event)" ng-change="vm.getSelectedList()" autocomplete="off" placeholder="请输入用户名或邮箱">',
-        ' <md-list class="dropdown" ng-show="vm.startSelect">',
+        '<md-input-container md-no-float class="auto-complete" ng-keydown="vm.updateKey($event)" fc-scroll="{{ vm.index }}" ',
+        '                    outside-click="vm.hideList()">',
+        ' <input ng-model="vm.content" ng-focus="vm.getSelectedList()" ng-click="vm.stopPropagation($event)" ',
+        '        ng-change="vm.getSelectedList()" autocomplete="off" placeholder="{{ placeholder }}">',
+        ' <md-list class="dropdown" ng-show="vm.canSelect">',
         '   <md-list-item id="dropdown-content-{{$index}}" ng-repeat="user in vm.slectedUserList">',
-        '     <p class="content" ng-class="{true: \'hover\', false: \'\'}[vm.index === $index]" ng-click="vm.selectUser(user)" ng-mouseover="vm.updateState($index)">',
-        '       {{ user.email }}',
-        '       <span class="primary"> ({{ user.username }})</span>',
-        '     </p>',
+        '     <p class="content" ng-class="{true: \'hover\', false: \'\'}[vm.index === $index]" ng-click="vm.select(user)" ',
+        '        ng-mouseover="vm.updateState($index)">{{ user }}</p>',
         '   </md-list-item>',
         ' </md-list>',
         '</md-input-container>',
@@ -52,30 +76,12 @@
   function Controller($scope) {
     var vm = this;
     vm.index = 0;
-    vm.userList = [{
-      username: 'wanfeichao',
-      email: 'wanfeichao@cvte.com'
-    }, {
-      username: 'len.may',
-      email: 'len.may@foxmail.com'
-    }, {
-      username: 'frank',
-      email: 'frank@frankly.ly'
-    }, {
-      username: 'wanfeichao-1',
-      email: 'wanfeichao-1@cvte.com'
-    }, {
-      username: 'len.may-1',
-      email: 'len.may-1@foxmail.com'
-    }, {
-      username: 'frank-1',
-      email: 'frank-1@frankly.ly'
-    }];
+    vm.data = $scope.listData;
 
-    vm.getKey = function(event) {
+    vm.updateKey = function(event) {
       switch (event.keyCode) {
         case 13: //enter key
-          vm.selectUser(vm.slectedUserList[vm.index]);
+          vm.select(vm.slectedUserList[vm.index]);
           break;
         case 38: //up key
           if (vm.index > 0) {
@@ -97,28 +103,36 @@
     };
 
     vm.getSelectedList = function() {
-      if(!vm.userinfo) {
+      if (!vm.content) {
         vm.slectedUserList = [];
         return;
       }
 
-      var regExp = new RegExp(vm.userinfo, 'i');
+      var regExp = new RegExp(vm.content, 'i');
 
-      vm.slectedUserList = vm.userList.filter(function(dt) {
-        return regExp.test(dt.username) || regExp.test(dt.email);
+      vm.slectedUserList = vm.data.filter(function(dt) {
+        return regExp.test(dt);
       });
 
       vm.index = 0;
-      vm.startSelect = true;
+      vm.showList();
     };
 
-    vm.selectUser = function(user) {
-      vm.userinfo = user.email;
-      vm.startSelect = false;
+    vm.select = function(user) {
+      vm.content = user;
+      vm.hideList();
     };
 
     vm.updateState = function(index) {
       vm.index = index;
+    };
+
+    vm.showList = function() {
+      vm.canSelect = true;
+    };
+
+    vm.hideList = function() {
+      vm.canSelect = false;
     };
   }
 })();
