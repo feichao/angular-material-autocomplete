@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="demoAutocomplete">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>demo autocomplete</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="bower_components/angular-material/angular-material.css">
+  <link rel="stylesheet" type="text/css" href="../src/angular-material-autocomplete.css">
+</head>
+
+<body>
+  <div ng-controller="DemoCtrl" style="margin: 20px;">
+    <div fc-auto-complete></div>
+  </div>
+  <script src="bower_components/angular/angular.js"></script>
+  <script src="bower_components/angular-animate/angular-animate.js"></script>
+  <script src="bower_components/angular-aria/angular-aria.js"></script>
+  <script src="bower_components/angular-material/angular-material.js"></script>
+  <script src="../src/angular-material-autocomplete.js"></script>
+  <script>
+  angular
+    .module('demoAutocomplete', [
+      'ngMaterial',
+      'fc.autocomplete'
+    ]).controller('DemoCtrl', DemoCtrl);
+
+  function DemoCtrl($scope) {
+    
+  }
+  </script>
+</body>
+
+</html>
