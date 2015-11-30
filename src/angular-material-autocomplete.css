@@ -28,6 +28,7 @@
 
 .auto-complete > .dropdown .content {
   cursor: pointer;
+  margin: 0;
   padding: 10px;
   transition: all 0.3s;
 }
