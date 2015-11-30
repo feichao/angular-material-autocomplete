@@ -5,9 +5,8 @@
 
   app = angular.module('fc.autocomplete', []);
 
-  app.directive('fcScroll', fcScroll);
-
-  function fcScroll() {
+  //directive: 下拉列表，按方向键滚动内容
+  app.directive('fcScroll', function() {
     return function(scope, ele, attrs) {
       var list = ele.find('md-list')[0];
       ele.on('keydown', function(e) {
@@ -19,8 +18,9 @@
         }
       });
     };
-  }
+  });
 
+  //directive: 组件外点击隐藏下拉列表
   contains = function(container, contained) {
     var node;
     node = contained.parentNode;
@@ -48,6 +48,7 @@
     };
   }]);
 
+  //directive: autocomplete
   app.directive('fcAutoComplete', function() {
     return {
       scope: {
@@ -55,14 +56,14 @@
         listData: '='
       },
       template: [
-        '<md-input-container md-no-float class="auto-complete" ng-keydown="vm.updateKey($event)" fc-scroll="{{ vm.index }}" ',
+        '<md-input-container md-no-float class="auto-complete" ng-keydown="vm.onKeyDown($event)" fc-scroll="{{ vm.index }}" ',
         '                    outside-click="vm.hideList()">',
-        ' <input ng-model="vm.content" ng-focus="vm.getSelectedList()" ng-click="vm.stopPropagation($event)" ',
-        '        ng-change="vm.getSelectedList()" autocomplete="off" placeholder="{{ placeholder }}">',
+        ' <input ng-model="vm.content" ng-focus="vm.getSelectedList()" ',
+        '        ng-change="vm.getSelectedList()" autocomplete="off" placeholder="{{ vm.placeholder }}">',
         ' <md-list class="dropdown" ng-show="vm.canSelect">',
-        '   <md-list-item id="dropdown-content-{{$index}}" ng-repeat="user in vm.slectedUserList">',
-        '     <p class="content" ng-class="{true: \'hover\', false: \'\'}[vm.index === $index]" ng-click="vm.select(user)" ',
-        '        ng-mouseover="vm.updateState($index)">{{ user }}</p>',
+        '   <md-list-item id="dropdown-content-{{$index}}" ng-repeat="dt in vm.selectedList">',
+        '     <p class="content" ng-class="{true: \'hover\', false: \'\'}[vm.index === $index]" ng-click="vm.setContent(dt)" ',
+        '        ng-mouseover="vm.addHoverClass($index)">{{ dt }}</p>',
         '   </md-list-item>',
         ' </md-list>',
         '</md-input-container>',
@@ -76,41 +77,34 @@
   function Controller($scope) {
     var vm = this;
     vm.index = 0;
+    vm.placeholder = $scope.placeholder;
     vm.data = $scope.listData;
 
-    vm.updateKey = function(event) {
+    vm.onKeyDown = function(event) {
       switch (event.keyCode) {
-        case 13: //enter key
-          vm.select(vm.slectedUserList[vm.index]);
+        case 13: //enter
+          vm.setContent(vm.selectedList[vm.index]);
           break;
-        case 38: //up key
-          if (vm.index > 0) {
-            vm.index--;
-          }
+        case 38: //up
+          vm.index > 0 && vm.index--;
           break;
-        case 40: //down key
-          if (vm.index < vm.slectedUserList.length - 1) {
-            vm.index++;
-          }
+        case 40: //down
+          vm.index < vm.selectedList.length - 1 && vm.index++;
           break;
         default:
           break;
       }
     };
 
-    vm.stopPropagation = function(event) {
-      event.stopPropagation();
-    };
-
     vm.getSelectedList = function() {
       if (!vm.content) {
-        vm.slectedUserList = [];
+        vm.selectedList = [];
         return;
       }
 
       var regExp = new RegExp(vm.content, 'i');
 
-      vm.slectedUserList = vm.data.filter(function(dt) {
+      vm.selectedList = vm.data.filter(function(dt) {
         return regExp.test(dt);
       });
 
@@ -118,12 +112,12 @@
       vm.showList();
     };
 
-    vm.select = function(user) {
+    vm.setContent = function(user) {
       vm.content = user;
       vm.hideList();
     };
 
-    vm.updateState = function(index) {
+    vm.addHoverClass = function(index) {
       vm.index = index;
     };
 
